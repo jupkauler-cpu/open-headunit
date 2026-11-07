@@ -3490,8 +3490,16 @@ class NativeAaHandshakeManager(
                             launcher.triggerWifiDirectRefresh()
                             return
                         }
+                        // Zeekr 007 GT diagnostic: match BSSID observed by the phone on ZEEKR-2211.
+                        val bssidForPhone = Zeekr007GtBssidPolicy.selectForPhone(
+                            credSsid, credBssid
+                        )
+                        if (bssidForPhone != credBssid) {
+                            AppLog.i("Zeekr007GT: Type-3 WiFi BSSID override for $credSsid: " +
+                                "original=$credBssid, sent=$bssidForPhone")
+                        }
                         sendWifiSecurityResponse(
-                            output, credSsid, credPsk, credBssid,
+                            output, credSsid, credPsk, bssidForPhone,
                             live!!.identity
                         )
                         // Set after the write returns, not before the delay above: this marks that

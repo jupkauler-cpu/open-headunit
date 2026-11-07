@@ -456,10 +456,17 @@ class WppTcpServer(
                         return
                     }
                     AppLog.i("WppTcpServer: [TX] WifiInfoResponse (Type 3) with credentials")
+                    val bssidForPhone = Zeekr007GtBssidPolicy.selectForPhone(
+                        creds.ssid, creds.bssid
+                    )
+                    if (bssidForPhone != creds.bssid) {
+                        AppLog.i("Zeekr007GT: TCP Type-3 WiFi BSSID override for ${creds.ssid}: " +
+                            "original=${creds.bssid}, sent=$bssidForPhone")
+                    }
                     send(
                         output,
                         WppMessages.infoResponse(
-                            creds.ssid, creds.psk, creds.bssid, creds.identity
+                            creds.ssid, creds.psk, bssidForPhone, creds.identity
                         ).toByteArray(),
                         WppMessageType.INFO_RESPONSE
                     )
