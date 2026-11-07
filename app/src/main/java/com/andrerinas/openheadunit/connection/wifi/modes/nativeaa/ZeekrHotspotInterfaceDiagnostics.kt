@@ -17,7 +17,7 @@ internal object ZeekrHotspotInterfaceDiagnostics {
     private const val PHONE_SSID = "ZEEKR-2211"
     private const val PHONE_BSSID = "56:C3:A2:9B:52:7D"
     private const val OTHER_AP_BSSID = "7A:75:99:03:CA:64"
-    private const val PHONE_GATEWAY = "192.168.1.1"
+    private const val PHONE_GATEWAY = "192.168.225.1"
 
     data class InterfaceRow(
         val name: String,
