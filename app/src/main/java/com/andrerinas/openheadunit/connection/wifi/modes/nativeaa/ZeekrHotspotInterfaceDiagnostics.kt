@@ -121,6 +121,8 @@ internal object ZeekrHotspotInterfaceDiagnostics {
                 appendLine("Read errors: ${errors.joinToString()}")
             }
             appendLine()
+            appendLine(ZeekrGatewayRouteDiagnostics.inspect(context, PHONE_GATEWAY))
+            appendLine()
             appendLine("A virtual access point's BSSID can differ from the hardware MAC.")
             appendLine("Some OEM interfaces can be hidden. IP matches are clues, not proof.")
             appendLine("After selecting an interface, SAVE settings before reconnecting.")
