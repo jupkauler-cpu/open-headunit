@@ -17,6 +17,8 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.graphics.Typeface
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -61,6 +63,7 @@ import com.andrerinas.openheadunit.connection.wifi.direct.StationStandDownPolicy
 import com.andrerinas.openheadunit.connection.wifi.modes.nativeaa.HotspotBandPreference
 import com.andrerinas.openheadunit.connection.wifi.modes.nativeaa.PreflightReport
 import com.andrerinas.openheadunit.connection.wifi.modes.nativeaa.SoftApBssidPolicy
+import com.andrerinas.openheadunit.connection.wifi.modes.nativeaa.ZeekrHotspotInterfaceDiagnostics
 import com.andrerinas.openheadunit.decoder.audio.PlaybackFocusPolicy
 import com.andrerinas.openheadunit.decoder.video.VideoFaultInjector
 import com.andrerinas.openheadunit.decoder.video.DeviceMemoryProfile
@@ -153,6 +156,7 @@ class SettingsFragment : Fragment() {
         // Which Bluetooth the phone pairs with, and the ESP32 relay page it leads to once chosen.
         "bluetoothLink", "Esp32Relay",
         "hotspotInterfaceOverride",
+        "zeekrHotspotInterfaces",
         // Dark mode
         "darkModeSettings",
         // Automation
@@ -516,6 +520,77 @@ class SettingsFragment : Fragment() {
             } while (zbtProbeJob?.isActive == true)
             updateSettingsList()
         }
+    }
+
+    /** Read the device's real interfaces without requiring ADB on the Zeekr. */
+    private fun showZeekrHotspotInterfaces() {
+        val context = requireContext().applicationContext
+        val selected = pendingHotspotInterface.orEmpty()
+        val ssid = pendingHotspotSsid.orEmpty()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val snapshot = try {
+                withContext(Dispatchers.IO) {
+                    ZeekrHotspotInterfaceDiagnostics.collect(context, selected, ssid)
+                }
+            } catch (e: Exception) {
+                if (!isAdded) return@launch
+                MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
+                    .setTitle(R.string.zeekr_hotspot_diagnostics_title)
+                    .setMessage("Interface scan failed: ${e.javaClass.simpleName}")
+                    .setPositiveButton(android.R.string.ok, null).show()
+                return@launch
+            }
+            if (!isAdded) return@launch
+            val report = TextView(requireContext()).apply {
+                text = snapshot.text
+                textSize = 14f
+                typeface = Typeface.MONOSPACE
+                setTextIsSelectable(true)
+                val pad = (16 * resources.displayMetrics.density).toInt()
+                setPadding(pad, pad, pad, pad)
+            }
+            val scroll = ScrollView(requireContext()).apply {
+                addView(report)
+                // Keep the action buttons reachable on a short landscape headunit display.
+                val height = (resources.displayMetrics.heightPixels * 0.55f).toInt()
+                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height)
+            }
+            MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
+                .setTitle(R.string.zeekr_hotspot_diagnostics_title)
+                .setView(scroll)
+                .setNegativeButton(R.string.zeekr_hotspot_diagnostics_close, null)
+                .setNeutralButton(R.string.zeekr_hotspot_diagnostics_copy) { _, _ ->
+                    val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("Zeekr hotspot interfaces", snapshot.text))
+                    Toast.makeText(requireContext(), R.string.zeekr_hotspot_diagnostics_copied, Toast.LENGTH_LONG).show()
+                }
+                .setPositiveButton(R.string.zeekr_hotspot_diagnostics_choose) { _, _ ->
+                    selectZeekrHotspotInterface(snapshot)
+                }.show()
+        }
+    }
+
+    /** Set the pending interface only: saving remains an explicit user decision. */
+    private fun selectZeekrHotspotInterface(snapshot: ZeekrHotspotInterfaceDiagnostics.Snapshot) {
+        val candidates = snapshot.interfaces.filter { it.selectable }
+        if (candidates.isEmpty()) {
+            MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
+                .setTitle(R.string.zeekr_hotspot_diagnostics_title)
+                .setMessage(R.string.zeekr_hotspot_diagnostics_none)
+                .setPositiveButton(android.R.string.ok, null).show()
+            return
+        }
+        val labels = candidates.map { row ->
+            "${row.name} - ${row.privateIpv4} - ${row.sysfsMac ?: row.hardwareMac ?: "MAC unknown"}"
+        }.toTypedArray()
+        MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
+            .setTitle(R.string.zeekr_hotspot_diagnostics_choose)
+            .setItems(labels) { _, which ->
+                pendingHotspotInterface = candidates[which].name
+                checkChanges()
+                updateSettingsList()
+                Toast.makeText(requireContext(), R.string.zeekr_hotspot_diagnostics_save, Toast.LENGTH_LONG).show()
+            }.setNegativeButton(android.R.string.cancel, null).show()
     }
 
     /** The phone Native AA prefers when several are paired. Needs BLUETOOTH_CONNECT on API 31+. */
@@ -1188,6 +1263,15 @@ class SettingsFragment : Fragment() {
                             }
                         )
                     }
+                ))
+
+                // Zeekr dual-hotspot diagnosis: list visible interfaces on the car screen.
+                items.add(SettingItem.SettingEntry(
+                    stableId = "zeekrHotspotInterfaces",
+                    nameResId = R.string.zeekr_hotspot_diagnostics_title,
+                    value = getString(R.string.zeekr_hotspot_diagnostics_summary),
+                    searchKeywords = "Zeekr WLAN IP MAC BSSID interface diagnose Netzwerk",
+                    onClick = { _ -> showZeekrHotspotInterfaces() }
                 ))
 
                 // The one route onto a unit whose Bluetooth cannot carry the handshake: the phone

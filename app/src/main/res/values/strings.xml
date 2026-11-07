@@ -1916,4 +1916,13 @@
     <string name="audio_matching_phase_gradient_hint">Slow playback</string>
     <string name="audio_matching_option" translatable="false">%1$s\n(%2$s)</string>
     <string name="audio_matching_description">OHU remains the default. WSOLA aligns overlapping waveforms; Phase Vocoder adjusts spectral phases. Short uses a shorter analysis window. Phase Gradient integrates phase gradients to reconstruct phases. These independent methods add processing latency; their names do not rank sound quality.\n\nNative methods: PCM music. Navigation, voice responses, system sounds and AAC use OHU.\nReconnect to apply. Removed engine preferences reset to OHU.</string>
+
+    <string name="zeekr_hotspot_diagnostics_title">Zeekr: inspect hotspot interfaces</string>
+    <string name="zeekr_hotspot_diagnostics_summary">Show IP addresses, MACs and automatic interface choice</string>
+    <string name="zeekr_hotspot_diagnostics_close">Close</string>
+    <string name="zeekr_hotspot_diagnostics_copy">Copy report</string>
+    <string name="zeekr_hotspot_diagnostics_copied">Network report copied</string>
+    <string name="zeekr_hotspot_diagnostics_choose">Choose interface</string>
+    <string name="zeekr_hotspot_diagnostics_none">No active interface with a private IPv4 address could be identified.</string>
+    <string name="zeekr_hotspot_diagnostics_save">Interface selected. Tap Save in settings before reconnecting.</string>
 </resources>

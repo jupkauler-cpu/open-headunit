@@ -1843,4 +1843,13 @@
     <string name="esp32_relay_end_aa_on_disconnect_summary">Sitzung beenden, wenn das Relay zweimal nicht antwortet</string>
     <string name="esp32_relay_end_aa_on_disconnect_description">Dieses Gerät sendet alle 2 Sekunden eine Statusprüfung an das Relay. Bleiben zwei Prüfungen in Folge ohne Antwort, endet die Android-Auto-Sitzung.</string>
     <string name="esp32_relay_phase_failed">Fehlgeschlagen: %1$s</string>
+
+    <string name="zeekr_hotspot_diagnostics_title">Zeekr: Hotspot-Schnittstellen anzeigen</string>
+    <string name="zeekr_hotspot_diagnostics_summary">IP-Adressen, MACs und automatische Auswahl prüfen</string>
+    <string name="zeekr_hotspot_diagnostics_close">Schließen</string>
+    <string name="zeekr_hotspot_diagnostics_copy">Bericht kopieren</string>
+    <string name="zeekr_hotspot_diagnostics_copied">Netzwerkbericht kopiert</string>
+    <string name="zeekr_hotspot_diagnostics_choose">Schnittstelle wählen</string>
+    <string name="zeekr_hotspot_diagnostics_none">Keine aktive Schnittstelle mit einer privaten IPv4-Adresse gefunden.</string>
+    <string name="zeekr_hotspot_diagnostics_save">Schnittstelle ausgewählt. Vor dem nächsten Versuch in den Einstellungen speichern.</string>
 </resources>
